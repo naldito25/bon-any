@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>Bon any</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            font-family: Arial, sans-serif;
+        }
+
+        .abajo {
+            position: absolute;
+            bottom: 320px;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5em;
+            color: rgba(247, 104, 104, 0.6);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .mensaje {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+            z-index: 5;
+        }
+
+        .mensaje h1 {
+            font-size: 3em;
+            color: pink;
+            text-shadow: 0 0 15px hotpink;
+        }
+
+        .mensaje p {
+            font-size: 1.5em;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #corazon {
+            z-index: 2;
+        }
+
+        #petardos {
+            z-index: 4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="abajo">
+        D'aquí a la lluna a passets de tortuga 
+    </div>
+
+    <div class="mensaje">
+        <h1>Bon any mor mor ❤️</h1>
+        <p>
+            Gràcies per fer d'aquest any un per recordar.<br>
+           
+        </p>
+    </div>
+
+    <canvas id="corazon"></canvas>
+    <canvas id="petardos"></canvas>
+
+    <script>
+        const canvasCorazon = document.getElementById("corazon");
+        const ctxC = canvasCorazon.getContext("2d");
+
+        const canvasPetardos = document.getElementById("petardos");
+        const ctxP = canvasPetardos.getContext("2d");
+
+        function resize() {
+            canvasCorazon.width = canvasPetardos.width = window.innerWidth;
+            canvasCorazon.height = canvasPetardos.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener("resize", resize);
+
+        /* ❤️ CORAZÓN SUAVE */
+        let t = 0;
+        function drawHeart() {
+            ctxC.clearRect(0, 0, canvasCorazon.width, canvasCorazon.height);
+
+            const cx = canvasCorazon.width / 2;
+            const cy = canvasCorazon.height / 2 + 30;
+
+            const baseScale = 22;
+            const pulse = Math.sin(t) * 0.8;
+            const scale = baseScale + pulse;
+
+            for (let a = 0; a < Math.PI * 2; a += 0.08) {
+                const x = 16 * Math.pow(Math.sin(a), 3);
+                const y = -(13 * Math.cos(a)
+                          - 5 * Math.cos(2 * a)
+                          - 2 * Math.cos(3 * a)
+                          - Math.cos(4 * a));
+
+                ctxC.fillStyle = "rgba(255, 0, 0, 0.85)";
+                ctxC.beginPath();
+                ctxC.arc(cx + x * scale, cy + y * scale, 2.5, 0, Math.PI * 2);
+                ctxC.fill();
+            }
+
+            t += 0.025;
+            requestAnimationFrame(drawHeart);
+        }
+        drawHeart();
+
+        /* 🎆 PETARDOS LENTOS Y SUAVES */
+        class Petardo {
+            constructor(x, y) {
+                this.particulas = [];
+                for (let i = 0; i < 30; i++) { // menos partículas
+                    this.particulas.push({
+                        x: x,
+                        y: y,
+                        angulo: Math.random() * Math.PI * 2,
+                        velocidad: Math.random() * 1.5 + 0.5, // MÁS LENTO
+                        alpha: 1,
+                        color: `hsl(${Math.random() * 360},100%,60%)`
+                    });
+                }
+            }
+
+            update() {
+                this.particulas.forEach(p => {
+                    p.x += Math.cos(p.angulo) * p.velocidad;
+                    p.y += Math.sin(p.angulo) * p.velocidad;
+                    p.alpha -= 0.004; // se apagan más despacio
+                });
+            }
+
+            draw() {
+                this.particulas.forEach(p => {
+                    ctxP.globalAlpha = p.alpha;
+                    ctxP.fillStyle = p.color;
+                    ctxP.beginPath();
+                    ctxP.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                    ctxP.fill();
+                });
+                ctxP.globalAlpha = 1;
+            }
+
+            muerto() {
+                return this.particulas.every(p => p.alpha <= 0);
+            }
+        }
+
+        const petardos = [];
+
+        function animarPetardos() {
+            ctxP.clearRect(0, 0, canvasPetardos.width, canvasPetardos.height);
+
+            if (Math.random() < 0.02) { // menos frecuencia
+                petardos.push(
+                    new Petardo(
+                        Math.random() * canvasPetardos.width,
+                        Math.random() * canvasPetardos.height * 0.6
+                    )
+                );
+            }
+
+            petardos.forEach((p, i) => {
+                p.update();
+                p.draw();
+                if (p.muerto()) petardos.splice(i, 1);
+            });
+
+            requestAnimationFrame(animarPetardos);
+        }
+
+        animarPetardos();
+    </script>
+
+</body>
+</html>
